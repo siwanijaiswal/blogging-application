@@ -1,0 +1,1 @@
+npm i nodemon -D ==> For installing nodemon in devDependencies that is used only in developer mode not in production
