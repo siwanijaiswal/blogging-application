@@ -8,6 +8,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -19,20 +20,24 @@ const userSchema = new Schema(
       enum: ["USER", "ADMIN"],
       default: "USER",
     },
+
     salt: {
       type: String,
-      required: true,
+      // required: true,
     },
+
     password: {
       type: String,
       required: true,
       unique: true,
     },
+
     profileImageURL: {
       type: String,
       default: "/images/default.jpg",
     },
   },
+
   { timeStamps: true }
 );
 
@@ -43,6 +48,7 @@ userSchema.pre("save", function (next) {
   if (!user.isModified("password")) return;
 
   const salt = randomBytes(16).toString();
+  // const salt = "somerandomsalt";
   const hashedPassword = createHmac("sha256", salt)
     .update(user.password)
     .digest("hex");
@@ -53,11 +59,30 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-const secret = "abcdefg";
-const hash = createHmac("sha256", secret)
-  .update("I love cupcakes")
-  .digest("hex");
-console.log(hash);
+// const secret = "abcdefg";
+// const hash = createHmac("sha256", secret)
+//   .update("I love cupcakes")
+//   .digest("hex");
+// console.log(hash);
+
+//virtual function in mongoose matching if user password after hashed is same or not?
+userSchema.static("matchPassword", async function (email, password) {
+  const user = await this.findOne({ email });
+  console.log(user);
+  if (!user) throw new Error("User not found!");
+
+  const salt = user.salt;
+  const hashedPassword = user.password;
+  const userProvidedHash = createHmac("sha256", salt)
+    .update(password)
+    .digest("hex");
+
+  if (hashedPassword !== userProvidedHash)
+    throw new Error("Incorrect Password");
+
+  // return hashedPassword === userProvidedHash;
+  return user;
+});
 
 const User = model("user", userSchema);
-module.exports = { User };
+module.exports = User;
