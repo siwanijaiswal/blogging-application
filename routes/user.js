@@ -17,11 +17,21 @@ router.post("/signup", async (req, res) => {
   res.redirect("/");
 });
 
+//this function may give error if password doesnot match, so keeping in try catch
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
-  console.log(req.body);
-  const user = await User.matchPassword(email, password);
-  console.log("User", user);
+  try {
+    const token = await User.matchPasswordAndGenerateToken(email, password);
+    // we got token here, now we will create cookie and store token their.
+    return res.cookie("token", token).redirect("/");
+  } catch (error) {
+    //render signin page is their is any error, handling error in nav.ejs
+    return res.render("signin", { error: "Incorrect email or password" });
+  }
+});
+
+router.get("/logout", (req, res) => {
+  res.clearCookie("token").redirect("/");
 });
 
 module.exports = router;

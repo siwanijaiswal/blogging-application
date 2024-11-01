@@ -1,5 +1,6 @@
 const { Schema, model } = require("mongoose");
 const { createHmac, randomBytes } = require("node:crypto");
+const { createTokenForUser } = require("../services/authentication");
 
 //password hash using salt
 const userSchema = new Schema(
@@ -66,23 +67,29 @@ userSchema.pre("save", function (next) {
 // console.log(hash);
 
 //virtual function in mongoose matching if user password after hashed is same or not?
-userSchema.static("matchPassword", async function (email, password) {
-  const user = await this.findOne({ email });
-  console.log(user);
-  if (!user) throw new Error("User not found!");
+userSchema.static(
+  "matchPasswordAndGenerateToken",
+  async function (email, password) {
+    const user = await this.findOne({ email });
+    if (!user) throw new Error("User not found!");
 
-  const salt = user.salt;
-  const hashedPassword = user.password;
-  const userProvidedHash = createHmac("sha256", salt)
-    .update(password)
-    .digest("hex");
+    const salt = user.salt;
+    const hashedPassword = user.password;
+    const userProvidedHash = createHmac("sha256", salt)
+      .update(password)
+      .digest("hex");
 
-  if (hashedPassword !== userProvidedHash)
-    throw new Error("Incorrect Password");
+    if (hashedPassword !== userProvidedHash)
+      throw new Error("Incorrect Password");
 
-  // return hashedPassword === userProvidedHash;
-  return user;
-});
+    // return hashedPassword === userProvidedHash;
+    // return user;
+
+    //after password hasing, create token and return it
+    const token = createTokenForUser(user);
+    return token;
+  }
+);
 
 const User = model("user", userSchema);
 module.exports = User;
