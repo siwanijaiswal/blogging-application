@@ -4,7 +4,6 @@ const path = require("path");
 const Blog = require("../models/blog");
 
 const router = Router();
-
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     //each user will have their own folder with its id
@@ -25,10 +24,16 @@ router.get("/add-new", (req, res) => {
   });
 });
 
+router.get("/:id", async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  return res.render("blog", {
+    user: req.user,
+    blog,
+  });
+});
+
 //add blog from add new page and post to /blog
 router.post("/", upload.single("coverImage"), async (req, res) => {
-  console.log(req.body);
-  console.log(req.file);
   const { title, body } = req.body;
   const blog = await Blog.create({
     body,

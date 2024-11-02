@@ -2,17 +2,14 @@ const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-
 const Blog = require("./models/blog");
 
 const app = express();
 const PORT = 8000;
-
 const userRouter = require("./routes/user");
 const {
   checkForAuthenticationCookie,
 } = require("./middlewares/authentication");
-
 const blogRoute = require("./routes/blog");
 
 app.set("view engine", "ejs");
@@ -26,6 +23,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(cookieParser());
 app.use(checkForAuthenticationCookie("token"));
+
 //to show images from public folder
 app.use(express.static(path.resolve("./public")));
 
