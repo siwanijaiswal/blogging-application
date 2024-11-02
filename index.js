@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 
+const Blog = require("./models/blog");
+
 const app = express();
 const PORT = 8000;
 
@@ -13,20 +15,25 @@ const {
 
 const blogRoute = require("./routes/blog");
 
+app.set("view engine", "ejs");
+app.set("views", path.resolve("./views"));
+
 //middlware for json raw data in body of postman
 app.use(express.json());
 
 //for supporting form data,using this middleware
 app.use(express.urlencoded({ extended: false }));
 
-app.set("view engine", "ejs");
-app.set("views", path.resolve("./views"));
 app.use(cookieParser());
 app.use(checkForAuthenticationCookie("token"));
+//to show images from public folder
+app.use(express.static(path.resolve("./public")));
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
+  const allBlogs = await Blog.find({});
   res.render("home", {
     user: req.user,
+    blogs: allBlogs,
   });
 });
 
